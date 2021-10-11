@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 
 namespace Online_Store_API.Controllers
 {
+    [Route("/customers")]
     public class CustomerController : Controller
     {
         private IMediator _mediator;
@@ -18,7 +19,8 @@ namespace Online_Store_API.Controllers
         public async Task<IActionResult> AddCustomer([FromBody] AddNewCustomerCommand command)
         {
             var result = await _mediator.Send(command);
-            return Ok(result);
+            var uri = $"{Request.Path}/{result.id}";
+            return Created(uri, result);
         }
     }
 }

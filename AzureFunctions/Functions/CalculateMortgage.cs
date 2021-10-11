@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using DataTier;
 using DataTier.Models;
+using DataTier.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Storage.Queue;
 using Microsoft.Azure.WebJobs;
@@ -10,10 +11,18 @@ using Newtonsoft.Json;
 
 namespace FunctionApp1
 {
-    public static class CalculateMortgage
-    { 
+    public class CalculateMortgage
+    {
+        private readonly IDbService<Customer> _customerService;
+        private IDbService<MortgageOffer> _offerService;
+        public CalculateMortgage(CustomerDbService customerService, OfferDbService offerService)
+        {
+            _customerService = customerService;
+            _offerService = offerService;
+        }
+
         [Function("CalculateMortgage")]
-        public static async Task Run([TimerTrigger("0 0 0 * * *")] MyInfo myTimer, FunctionContext context)
+        public async Task Run([TimerTrigger("0 0 0 * * *")] MyInfo myTimer, FunctionContext context)
         {
             var logger = context.GetLogger("CalculateMortgage");
 
@@ -28,13 +37,17 @@ namespace FunctionApp1
 
             int messageCount = cloudQueue.ApproximateMessageCount ?? 0;
             var messages = await cloudQueue.GetMessagesAsync(messageCount);
+
             foreach (var message in messages)
             {
-                var customer = JsonConvert.DeserializeObject<Customer>(message.AsString);
-                var offer = new MortgageOffer(customer.IncomePerYear);
-                var message = new CloudQueueMessage(offer.ToString());
-                await cloudQueue.AddMessageAsync(message);
+                Customer customer = await _customerService.GetAsync(message.AsString);
+                MortgageOffer offer = await _offerService.AddAsync(new MortgageOffer(customer.IncomePerYear));
+                customer.MortgageOffer = offer;
+                await _customerService.UpdateAsync(customer);
+                var newCloudMessage = new CloudQueueMessage(offer.ToString());
+                await cloudQueue.AddMessageAsync(newCloudMessage);
             }
+
             logger.LogInformation($"Processed {messageCount} Offers at {DateTime.Now}");
 
             logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");

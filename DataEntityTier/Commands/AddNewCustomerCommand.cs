@@ -5,6 +5,6 @@ namespace DataTier.Commands
 {
     public class AddNewCustomerCommand : IRequest<Customer>
     {
-        public Customer Customer { get; set; }
+        public CustomerDTO Customer { get; set; }
     }
 }

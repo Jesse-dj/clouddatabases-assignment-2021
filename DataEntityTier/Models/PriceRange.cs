@@ -1,15 +1,37 @@
-﻿namespace DataTier
-{
-    public struct PriceRange
-    {
-        public double StartPrice { get; }
-        public double EndPrice { get; }
+﻿using System;
 
-        public PriceRange(double startPrice, double endprice)
+namespace DataTier
+{
+    public class PriceRange
+    {
+        private float startPrice = 0f;
+        private float endPrice = float.MaxValue;
+        public float StartPrice {
+            get
+            {
+                return startPrice;
+            }
+            set
+            {
+                if (value < 0f) startPrice = 0f;
+            }
+        }
+        public float EndPrice { 
+            get
+            {
+                return endPrice;
+            }
+            set
+            {
+                endPrice = value;
+            }
+        }
+
+        public PriceRange(float startPrice, float endprice)
         {
             if (startPrice > endprice)
             {
-                double tempDouble = startPrice;
+                float tempDouble = startPrice;
                 startPrice = endprice;
                 endprice = tempDouble;
             }
@@ -17,7 +39,7 @@
             EndPrice = endprice;
         }
 
-        public bool IsPriceBetween(double price)
+        public bool IsPriceBetween(float price)
         {
             return StartPrice <= price && price <= EndPrice;
         }

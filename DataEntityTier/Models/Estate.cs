@@ -6,7 +6,7 @@ namespace Online_Store_API
     {
         public uint Id { get; set; }
         public Address Address { get; set; }
-        public double Price { get; set; }
+        public float Price { get; set; }
         public ListingStatus Status { get; set; }
 
     }

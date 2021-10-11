@@ -47,7 +47,7 @@ namespace FunctionApp1
                 HtmlContent = $"Your calculated mortgage is {offer.TotalMortgage} \n" +
                                 $"Your montlhy payment will be {offer.MonthlyPayments}"
             };
-            msg.AddTo(new EmailAddress(customer.Email, customer.Name));
+            msg.AddTo(new EmailAddress(customer.Email, customer.Firstname));
             var response = await client.SendEmailAsync(msg).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {

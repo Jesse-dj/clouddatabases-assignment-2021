@@ -4,8 +4,9 @@ using System.Collections.Generic;
 
 namespace DataTier.Queries
 {
-    public class GetEstatesByPriceRangeQuery : IRequest<IEnumerable<Estate>>
+    public class GetEstatesQuery : IRequest<IEnumerable<Estate>>
     {
+        public string searchTerm { get; set; }
         public PriceRange priceRange { get; set; }
     }
 }

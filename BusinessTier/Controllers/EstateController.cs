@@ -1,14 +1,8 @@
-﻿using Cqrs.Commands;
-using DataTier;
-using DataTier.Commands;
+﻿using DataTier;
+using DataTier.Queries;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Online_Store_API.Commands;
 using Online_Store_API.Queries;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Online_Store_API.Controllers
@@ -29,9 +23,8 @@ namespace Online_Store_API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetEstatesAsync([FromQuery] PriceRange? priceRange)
+        public async Task<IActionResult> GetEstatesAsync([FromQuery] GetEstatesQuery query)
         {
-            var query = GetEstatesAsync(priceRange);
             var result = await _mediator.Send(query);
             return Ok(result);
         }
