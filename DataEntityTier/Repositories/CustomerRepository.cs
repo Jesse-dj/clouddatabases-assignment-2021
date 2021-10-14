@@ -11,7 +11,7 @@ namespace DataTier.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {
-        private CustomerContext context;
+        private readonly CustomerContext _context;
 
         public async Task<Customer> AddAsync(Customer entity)
         {

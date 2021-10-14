@@ -1,12 +1,16 @@
+using DataTier.IServices;
+using DataTier.Models;
 using DataTier.Services;
 using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Fluent;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using System;
 using System.Threading.Tasks;
 
 namespace Online_Store_API
@@ -23,7 +27,6 @@ namespace Online_Store_API
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
             services.AddControllers();
             services.AddMediatR(typeof(Startup));
             services.AddSwaggerGen(c =>
@@ -31,7 +34,16 @@ namespace Online_Store_API
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Online_Store_API", Version = "v1" });
             });
 
-            services.AddSingleton<IDbService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+            services.AddSingleton<ICustomerService>(InitializeCosmosClientInstanceAsync(Configuration.GetSection("CosmosDb")).GetAwaiter().GetResult());
+
+/*            services.AddSingleton(s => {
+                string connectionString = Environment.GetEnvironmentVariable("connectionString");
+                string databaseName = Environment.GetEnvironmentVariable("databaseName");
+
+                var client = new CosmosClient(connectionString);
+                client.CreateDatabaseIfNotExistsAsync(databaseName);
+                return client.GetDatabase(databaseName);
+            });*/
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -55,14 +67,16 @@ namespace Online_Store_API
                 endpoints.MapControllers();
             });
         }
-        private static async Task<IDbService> InitializeCosmosClientInstanceAsync(IConfigurationSection configurationSection)
+
+        private static async Task<ICustomerService> InitializeCosmosClientInstanceAsync(IConfigurationSection configurationSection)
         {
             var databaseName = configurationSection["DatabaseName"];
             var containerName = configurationSection["ContainerName"];
-            var account = configurationSection["Account"];
-            var key = configurationSection["Key"];
+            var connectionString = configurationSection["ContainerName"];
+            /*var account = configurationSection["Account"];*/
+            /*var key = configurationSection["Key"];*/
 
-            var client = new CosmosClient(account, key);
+            var client = new CosmosClient(connectionString);
             var database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
             await database.Database.CreateContainerIfNotExistsAsync(containerName, "/id");
 

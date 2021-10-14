@@ -1,4 +1,6 @@
-﻿using DataTier.Models;
+﻿using DataTier.IServices;
+using DataTier.Models;
+using DataTier.Repositories;
 using Microsoft.Azure.Cosmos;
 using System;
 using System.Collections.Generic;
@@ -7,18 +9,18 @@ using System.Threading.Tasks;
 
 namespace DataTier.Services
 {
-    public class CustomerDbService : IDbService<Customer>
+    public class CustomerDbService : ICustomerService
     {
-        private Container _container;
+        private readonly ICustomerRepository _repository;
 
-        public CustomerDbService(CosmosClient cosmosDbClient,string databaseName,string containerName)
+        public CustomerDbService(ICustomerRepository repository)
         {
-            _container = cosmosDbClient.GetContainer(databaseName, containerName);
+            _repository = repository;
         }
 
         public async Task<Customer> AddAsync(Customer customer)
         {
-            var response = await _container.CreateItemAsync(customer, new PartitionKey(customer.id));
+            var response = await _repository.CreateItemAsync(customer, new PartitionKey(customer.id));
             return response.Resource;
 
         }
@@ -38,7 +40,7 @@ namespace DataTier.Services
             catch (CosmosException ex)
             {
                 Console.WriteLine("Cosmos Exception: " + ex.Message);
-                return;
+                return null;
             }
         }
 
