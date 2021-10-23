@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 
 namespace DataTier.Repositories
 {
-    public interface IRepository<T> where T : class, new()
+    public interface IRepository<T, ID> where T : class, new()
     {
-        Task<IEnumerable<T>> AllIncludingAsync(params Expression<Func<T, object>>[] includeProperties);
-        Task<IEnumerable<T>> GetAllAsync();
+        Task<List<T>> AllIncluding(params Expression<Func<T, object>>[] includeProperties);
+        Task<List<T>> GetAll();
         int Count();
-        Task<T> GetSingleAsync(uint id);
-        Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate);
-        Task<T> GetSingleAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
-        Task<IEnumerable<T>> FindBy(Expression<Func<T, bool>> predicate);
-        Task<T> AddAsync(T entity);
-        Task<T> UpdateAsync(T entity);
-        Task DeleteAsync(T entity);
-        Task DeleteWhereAsync(Expression<Func<T, bool>> predicate);
+        Task<T> GetSingleById(ID id);
+        Task<T> GetSingle(Expression<Func<T, bool>> predicate);
+        Task<T> GetSingle(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includeProperties);
+        Task<List<T>> FindBy(Expression<Func<T, bool>> predicate);
+        Task<T> Add(T entity);
+        Task<T> Update(T entity);
+        Task DeleteById(ID id);
+        Task DeleteWhere(Expression<Func<T, bool>> predicate);
         void Commit();
     }
 }

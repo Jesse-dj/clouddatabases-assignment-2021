@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Cqrs" Version="4.3.3.1240345038" />
     <PackageReference Include="MediatR" Version="9.0.0" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.21.0" />
     <PackageReference Include="Microsoft.Azure.WebJobs" Version="3.0.30" />

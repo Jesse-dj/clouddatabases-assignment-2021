@@ -9,10 +9,10 @@ namespace DataTier.Services
 {
     public interface IDbService<T>
     {
-        Task<IEnumerable<T>> GetMultipleAsync(string query);
-        Task<T> GetAsync(string id);
-        Task<T> AddAsync(T item);
-        Task<T> UpdateAsync(T item);
-        Task DeleteAsync(string id);
+        Task<IEnumerable<T>> GetMultiple(string query);
+        Task<T> GetById(string id);
+        Task<T> Add(T item);
+        Task<T> Update(T item);
+        Task DeleteById(string id);
     }
 }

@@ -8,18 +8,17 @@ namespace DataTier
 {
     public class MortgageOffer
     {
-        public Guid Id { get; } = Guid.NewGuid();
-        public uint CustomerId { get; }
-        public uint Years { get; } = 30;
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public uint Years { get; set; } = 30;
         /// <summary>
         /// Total mortgage the customer can get. 
         /// </summary>
-        public double TotalMortgage { get; }
+        public double TotalMortgage { get; set; }
         /// <summary>
         /// Monthly payment the customer can pay per month.
         /// </summary>
-        public double MonthlyPayments { get; }
-        public double Annuity { get; } = 0.064419;
+        public double MonthlyPayments { get; set; }
+        public double Annuity { get; set; } = 0.064419;
         public MortgageOffer(double yearlyIncome)
         {
             MonthlyPayments = yearlyIncome * 0.29 / 12;

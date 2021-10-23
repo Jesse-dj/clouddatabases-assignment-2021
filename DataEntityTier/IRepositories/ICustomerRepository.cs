@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DataTier.Repositories
 {
-    public interface ICustomerRepository : IRepository<Customer>
+    public interface ICustomerRepository : IRepository<Customer, string>
     {
     }
 }

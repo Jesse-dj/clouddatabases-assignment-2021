@@ -5,6 +5,7 @@ using Microsoft.Azure.Cosmos;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace DataTier.Services
@@ -18,50 +19,81 @@ namespace DataTier.Services
             _repository = repository;
         }
 
-        public async Task<Customer> AddAsync(Customer customer)
+        public async Task<Customer> Add(Customer customer)
         {
-            var response = await _repository.CreateItemAsync(customer, new PartitionKey(customer.id));
-            return response.Resource;
-
-        }
-
-        public async Task DeleteAsync(string id)
-        {
-            await _container.DeleteItemAsync<Customer>(id: id, partitionKey: new PartitionKey(id));
-        }
-
-        public async Task<Customer> GetAsync(string id)
-        {        
             try
             {
-                var response = await _container.ReadItemAsync<Customer>(id, new PartitionKey(id));
-                return response.Resource;
+                return await _repository.Add(customer);
             }
             catch (CosmosException ex)
             {
-                Console.WriteLine("Cosmos Exception: " + ex.Message);
+                Console.WriteLine("Cosmos Exception: " + ex);
                 return null;
             }
         }
 
-        public async Task<IEnumerable<Customer>> GetMultipleAsync(string queryString)
+        public async Task DeleteById(string id)
         {
-            var query = _container.GetItemQueryIterator<Customer>(new QueryDefinition(queryString));
-
-            var results = new List<Customer>();
-            while (query.HasMoreResults)
+            try
             {
-                var response = await query.ReadNextAsync();
-                results.AddRange(response.ToList());
+                await _repository.DeleteById(id);
             }
-
-            return results;
+            catch (CosmosException)
+            {
+                return;
+            }
         }
 
-        public async Task<Customer> UpdateAsync(Customer customer)
+        public async Task<IEnumerable<Customer>> FindBy(Expression<Func<Customer,bool>> expression)
         {
-            var response = await _container.UpsertItemAsync(customer, new PartitionKey(customer.id));
-            return response.Resource;
+            try
+            {
+                return await _repository.FindBy(expression);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
         }
+
+        public async Task<Customer> GetById(string id)
+        {        
+            try
+            {
+                return await _repository.GetSingleById(id);
+            }
+            catch (CosmosException)
+            {
+                return null;
+            }
+        }
+
+        public async Task<IEnumerable<Customer>> GetMultiple(string queryString)
+        {
+            try
+            {
+                return await _repository.GetAll();
+            }
+            catch (CosmosException)
+            {
+
+                return null;
+            }
+        }
+
+        public async Task<Customer> Update(Customer customer)
+        {
+            try
+            {
+                return await _repository.Update(customer);
+            }
+            catch (CosmosException)
+            {
+                return null;
+            }           
+        }
+
+
     }
 }

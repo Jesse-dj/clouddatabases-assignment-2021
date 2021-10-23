@@ -1,5 +1,7 @@
 ﻿using DataTier.Context;
 using DataTier.Models;
+using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,14 +13,18 @@ namespace DataTier.Repositories
 {
     public class CustomerRepository : ICustomerRepository
     {
-        private readonly CustomerContext _context;
-
-        public async Task<Customer> AddAsync(Customer entity)
+        private readonly Container _container;
+        public CustomerRepository(Container container)
         {
-            throw new NotImplementedException();
+            _container = container;
         }
 
-        public async Task<IEnumerable<Customer>> AllIncludingAsync(params Expression<Func<Customer, object>>[] includeProperties)
+        public async Task<Customer> Add(Customer entity)
+        {
+            return await _container.CreateItemAsync(entity);
+        }
+
+        public async Task<List<Customer>> AllIncluding(params Expression<Func<Customer, object>>[] includeProperties)
         {
             throw new NotImplementedException();
         }
@@ -33,44 +39,45 @@ namespace DataTier.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task DeleteAsync(Customer entity)
+        public async Task DeleteById(string id)
+        {
+            await _container.DeleteItemAsync<Customer>(id: id,  new PartitionKey(id));
+        }
+
+        public Task DeleteWhere(Expression<Func<Customer, bool>> predicate)
         {
             throw new NotImplementedException();
         }
 
-        public async Task DeleteWhereAsync(Expression<Func<Customer, bool>> predicate)
+        public async Task<List<Customer>> FindBy(Expression<Func<Customer, bool>> predicate)
+        {           
+            return _container.GetItemLinqQueryable<Customer>(true)
+                .Where(predicate).ToList();
+        }
+
+        public async Task<List<Customer>> GetAll()
+        {
+            return _container.GetItemLinqQueryable<Customer>(true).ToList();
+        }
+
+        public async Task<Customer> GetSingleById(string id)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<Customer>> FindBy(Expression<Func<Customer, bool>> predicate)
+        public async Task<Customer> GetSingle(Expression<Func<Customer, bool>> predicate)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<Customer>> GetAllAsync()
+        public async Task<Customer> GetSingle(Expression<Func<Customer, bool>> predicate, params Expression<Func<Customer, object>>[] includeProperties)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<Customer> GetSingleAsync(uint id)
+        public async Task<Customer> Update(Customer entity)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> GetSingleAsync(Expression<Func<Customer, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> GetSingleAsync(Expression<Func<Customer, bool>> predicate, params Expression<Func<Customer, object>>[] includeProperties)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> UpdateAsync(Customer entity)
-        {
-            throw new NotImplementedException();
+            return await _container.UpsertItemAsync(entity, new PartitionKey(entity.Id.ToString()));
         }
     }
 }
