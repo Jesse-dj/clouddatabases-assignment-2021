@@ -24,19 +24,19 @@ namespace DataTier.Repositories
             return await _container.CreateItemAsync(entity);
         }
 
-        public async Task<List<Customer>> AllIncluding(params Expression<Func<Customer, object>>[] includeProperties)
+        public async Task<List<Customer>> AllIncluding(params Expression<Func<Customer, bool>>[] includeProperties)
         {
-            throw new NotImplementedException();
-        }
-
-        public void Commit()
-        {
-            throw new NotImplementedException();
+            IEnumerable<Customer> queryable = _container.GetItemLinqQueryable<Customer>();
+            foreach (var includeProperty in includeProperties)
+            {
+                queryable = queryable.Where(includeProperty.Compile());
+            }
+            return queryable.ToList();
         }
 
         public int Count()
         {
-            throw new NotImplementedException();
+            return _container.GetItemLinqQueryable<Customer>().Count();
         }
 
         public async Task DeleteById(string id)
@@ -44,35 +44,14 @@ namespace DataTier.Repositories
             await _container.DeleteItemAsync<Customer>(id: id,  new PartitionKey(id));
         }
 
-        public Task DeleteWhere(Expression<Func<Customer, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<Customer>> FindBy(Expression<Func<Customer, bool>> predicate)
-        {           
-            return _container.GetItemLinqQueryable<Customer>(true)
-                .Where(predicate).ToList();
-        }
-
         public async Task<List<Customer>> GetAll()
         {
             return _container.GetItemLinqQueryable<Customer>(true).ToList();
         }
 
-        public async Task<Customer> GetSingleById(string id)
+        public async Task<Customer> FindById(string id)
         {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> GetSingle(Expression<Func<Customer, bool>> predicate)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<Customer> GetSingle(Expression<Func<Customer, bool>> predicate, params Expression<Func<Customer, object>>[] includeProperties)
-        {
-            throw new NotImplementedException();
+            return await _container.ReadItemAsync<Customer>(id: id, new PartitionKey(id));
         }
 
         public async Task<Customer> Update(Customer entity)

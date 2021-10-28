@@ -44,13 +44,13 @@ namespace DataTier.Services
             }
         }
 
-        public async Task<IEnumerable<Customer>> FindBy(Expression<Func<Customer,bool>> expression)
+        public async Task<List<Customer>> FindBy(params Expression<Func<Customer,bool>>[] predicates)
         {
             try
             {
-                return await _repository.FindBy(expression);
+                return await _repository.AllIncluding(predicates);
             }
-            catch (Exception)
+            catch (CosmosException)
             {
 
                 throw;
@@ -61,7 +61,7 @@ namespace DataTier.Services
         {        
             try
             {
-                return await _repository.GetSingleById(id);
+                return await _repository.FindById(id);
             }
             catch (CosmosException)
             {
@@ -93,7 +93,5 @@ namespace DataTier.Services
                 return null;
             }           
         }
-
-
     }
 }

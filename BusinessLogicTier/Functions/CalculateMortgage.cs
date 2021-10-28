@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 using DataTier;
 using DataTier.IServices;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Storage.Queue;
 using Microsoft.Extensions.Logging;
-using Microsoft.Azure.WebJobs;
 
 namespace CalculateMortgageAndSendMail.Functions
 {
@@ -34,5 +32,22 @@ namespace CalculateMortgageAndSendMail.Functions
             logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
             logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");
         }
+    }
+
+    public class MyInfo
+    {
+        public ScheduleStatus ScheduleStatus { get; set; }
+
+        public bool IsPastDue { get; set; }
+    }
+
+    public class MySchedueleStatus
+    {
+        public DateTime Last { get; set; }
+
+        public DateTime Next { get; set; }
+
+        public DateTime LastUpdated { get; set; }
+
     }
 }

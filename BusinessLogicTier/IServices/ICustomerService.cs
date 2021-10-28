@@ -9,6 +9,6 @@ namespace DataTier.IServices
 {
     public interface ICustomerService : IDbService<Customer>
     {
-        Task<IEnumerable<Customer>> FindBy(Expression<Func<Customer, bool>> expression);
+        Task<List<Customer>> FindBy(params Expression<Func<Customer, bool>>[] predicates);
     }
 }

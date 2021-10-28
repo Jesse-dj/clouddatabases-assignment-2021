@@ -12,8 +12,8 @@ namespace BusinessTier.Handlers
     public class CustomerCommandHandler :
         IRequestHandler<AddNewCustomer, Customer>
     {
-        private ICustomerService _customerDbService;
-        private IMapper _mapper;
+        private readonly ICustomerService _customerDbService;
+        private readonly IMapper _mapper;
 
         public CustomerCommandHandler(ICustomerService customerDbService)
         {

@@ -16,7 +16,7 @@ namespace CalculateMortgageAndSendMail.Functions
     public class SendMail
     {
         private readonly ICustomerService _service;
-        private string sendGridApiKey;
+        private readonly string sendGridApiKey;
 
         public SendMail(ICustomerService service)
         {
