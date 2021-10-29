@@ -1,7 +1,12 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DataTier;
-using DataTier.IServices;
+using DataTier.Commands;
+using DataTier.Models;
+using DataTier.Queries;
+using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
@@ -9,11 +14,10 @@ namespace CalculateMortgageAndSendMail.Functions
 {
     public class CalculateMortgage
     {
-        private readonly ICustomerService _customerService;
-        
-        public CalculateMortgage(ICustomerService customerService)
+        private readonly IMediator _mediator;
+        public CalculateMortgage(IMediator mediator)
         {
-            _customerService = customerService;
+            _mediator = mediator;
         }
 
         [Function("CalculateMortgage")]
@@ -21,13 +25,19 @@ namespace CalculateMortgageAndSendMail.Functions
         {
             var logger = context.GetLogger("CalculateMortgage");
 
-            var customers = await _customerService.FindBy(c => c.MortgageOffer == null);
+            var query = new GetCustomersByNoOffer();
+            IEnumerable<Customer> customers = await _mediator.Send(query);
 
             foreach (var customer in customers)
             {
                 customer.MortgageOffer = new MortgageOffer(customer.IncomePerYear);
-                await _customerService.Update(customer);
+                var command = new UpdateCustomer()
+                {
+                    Customer = customer
+                };
+                await _mediator.Send(command);
             }
+            logger.LogInformation($"Total Mortgages Calculated: {customers.Count()}");
 
             logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
             logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");

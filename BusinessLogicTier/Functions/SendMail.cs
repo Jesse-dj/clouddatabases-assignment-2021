@@ -1,12 +1,12 @@
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using DataTier;
-using DataTier.IServices;
 using DataTier.Models;
+using DataTier.Queries;
+using MediatR;
 using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Storage.Queue;
-using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using SendGrid;
 using SendGrid.Helpers.Mail;
@@ -15,12 +15,12 @@ namespace CalculateMortgageAndSendMail.Functions
 {
     public class SendMail
     {
-        private readonly ICustomerService _service;
+        private readonly IMediator _mediator;
         private readonly string sendGridApiKey;
 
-        public SendMail(ICustomerService service)
+        public SendMail(IMediator mediator)
         {
-            _service = service;
+            _mediator = mediator;
             sendGridApiKey = Environment.GetEnvironmentVariable("sendgrid_key");
         }
 
@@ -29,12 +29,14 @@ namespace CalculateMortgageAndSendMail.Functions
         {
             var logger = context.GetLogger("SendMail");
 
-            var customers = await _service.GetMultiple("");
+            var query = new GetCustomersByNewlyCreated();
+            IEnumerable<Customer> customers = await _mediator.Send(query);
 
             foreach (Customer customer in customers)
             {
                 await SendMailAsync(customer, customer.MortgageOffer);
             }
+            logger.LogInformation($"Total Mails Send: {customers.Count()}");
 
             logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
             logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");

@@ -1,13 +1,8 @@
-using DataTier.IServices;
-using DataTier.Repositories;
-using DataTier.Services;
+using DataTier.Context;
 using MediatR;
-using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using System;
-using System.Threading.Tasks;
 
 namespace CalculateMortgageAndSendMail
 {
@@ -24,26 +19,12 @@ namespace CalculateMortgageAndSendMail
                 .ConfigureServices(services =>
                 {
                     services.AddMediatR(typeof(Program));
-                    services.AddSingleton<Microsoft.Azure.Cosmos.Container>(InitializeCosmosContainerInstanceAsync().GetAwaiter().GetResult());
-                    services.AddSingleton<ICustomerService, CustomerDbService>();
-                    services.AddSingleton<ICustomerRepository, CustomerRepository>();
+                    services.AddDbContext<CosmosDbContext>();
+                    services.AddLogging();
                 })
                 .Build();
 
             host.Run();
-        }
-
-        private static async Task<Container> InitializeCosmosContainerInstanceAsync()
-        {
-            var databaseName = Environment.GetEnvironmentVariable("DatabaseName");
-            var containerName = Environment.GetEnvironmentVariable("ContainerName");
-            var connectionString = Environment.GetEnvironmentVariable("connectionString");
-
-            var client = new CosmosClient(connectionString);
-            var database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
-            var container = await database.Database.CreateContainerIfNotExistsAsync(containerName, "/id");
-
-            return container.Container;
         }
     }
 }

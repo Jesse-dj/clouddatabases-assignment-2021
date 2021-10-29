@@ -39,6 +39,7 @@ namespace CalculateMortgageAndSendMail.Controllers
             };
 
             var result = await _mediator.Send(command);
+            if (result == null) return new BadRequestResult();
 
             return new OkObjectResult(result);
         }

@@ -1,32 +1,89 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using DataTier.IServices;
+using DataTier.Context;
 using DataTier.Models;
 using DataTier.Queries;
 using MediatR;
+using Microsoft.Azure.Cosmos;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BusinessTier.Handlers
 {
     public class CustomerQueryHandler :
         IRequestHandler<GetCustomerById, Customer>,
-        IRequestHandler<GetCustomersByHasMortgage, IEnumerable<Customer>>
+        IRequestHandler<GetCustomersByNoOffer, IEnumerable<Customer>>,
+        IRequestHandler<GetCustomersByNewlyCreated, IEnumerable<Customer>>
     {
-        private readonly ICustomerService _service; 
-        public CustomerQueryHandler(ICustomerService service)
+        private readonly ILogger _logger;
+        public CustomerQueryHandler(ILogger<CustomerQueryHandler> logger)
         {
-            _service = service;
+            _logger = logger;
         }
 
         public async Task<Customer> Handle(GetCustomerById request, CancellationToken cancellationToken)
         {
-            return await _service.GetById(request.CustomerId);
+            try
+            {
+                using (var context = new CosmosDbContext())
+                {
+                    return await context.FindAsync<Customer>(request.CustomerId);
+                }               
+            }
+            catch (CosmosException cosmosException)
+            {
+                _logger.LogWarning(cosmosException.Message);
+                return null;
+            }
         }
 
-        public async Task<IEnumerable<Customer>> Handle(GetCustomersByHasMortgage request, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Customer>> Handle(GetCustomersByNoOffer request, CancellationToken cancellationToken)
         {
-            return await _service.FindBy(request.HasMortgageOffer);
+            try
+            {
+                using (var context = new CosmosDbContext())
+                {
+                    // For some reason the linq equivalent doesnt work
+
+                    // works
+                    var query = context.Customers
+                        .FromSqlRaw(request.HasNoMortgageOfferQuery);
+
+                    // doenst work
+                    /*var query = context.Customers.Where(c => c.MortgageOffer == null);*/
+
+                    return await query.ToListAsync();
+                }
+            }
+            catch (CosmosException cosmosException)
+            {
+                _logger.LogWarning(cosmosException.Message);
+                return Enumerable.Empty<Customer>();
+            }
+
+        }
+
+        public async Task<IEnumerable<Customer>> Handle(GetCustomersByNewlyCreated request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                using (var context = new CosmosDbContext())
+                {
+                    // does work
+                    var query = context.Customers
+                            .Where(c => c.MortgageOffer != null)
+                            .Where(request.offerMadeWithin24Hours);
+
+                    return await query.ToListAsync();
+                }
+            }
+            catch (CosmosException cosmosException)
+            {
+                _logger.LogWarning(cosmosException.Message);
+                return Enumerable.Empty<Customer>();
+            }
         }
     }
 }
