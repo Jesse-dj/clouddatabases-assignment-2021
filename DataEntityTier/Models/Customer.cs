@@ -1,18 +1,13 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.ComponentModel.DataAnnotations;
-
-namespace DataTier.Models
+﻿namespace DataTier.Models
 {
     public class Customer
     {
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string CustomerId { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
         public string Email { get; set; }
-        public double IncomePerYear { get; set; }
-        public MortgageOffer? MortgageOffer { get; set; }
-        [JsonProperty(PropertyName = "partitonKey")]
-        public string partitionKey { get; set; } = Guid.NewGuid().ToString();
+        public double YearlyIncome { get; set; }
+        public bool ReceivedMessage { get; set; } = false;
+        public MortgageOffer? MortgageOffer { get; set; } = null;
     }
 }

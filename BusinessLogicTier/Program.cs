@@ -1,8 +1,12 @@
+using BusinessTier.Handlers;
+using BusinessTier.IServices;
+using BusinessTier.Services;
 using DataTier.Context;
-using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System;
 
 namespace CalculateMortgageAndSendMail
 {
@@ -18,9 +22,20 @@ namespace CalculateMortgageAndSendMail
                 })
                 .ConfigureServices(services =>
                 {
-                    services.AddMediatR(typeof(Program));
-                    services.AddDbContext<CosmosDbContext>();
+                    services.AddDbContext<CosmosDbContext>(options =>
+                    {
+                        options.UseCosmos(
+                            connectionString: Environment.GetEnvironmentVariable("connectionString"),
+                            databaseName: Environment.GetEnvironmentVariable("databaseName"));
+                    });
+
                     services.AddLogging();
+
+                    services.AddTransient<CustomerQueryHandler>();
+                    services.AddTransient<CustomerCommandHandler>();
+
+                    services.AddTransient<IMessageService, MailService>();
+                    services.AddTransient<IMortgageService, MortgageService>();
                 })
                 .Build();
 

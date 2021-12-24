@@ -1,23 +1,29 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using DataTier;
+using BusinessTier.Handlers;
+using BusinessTier.IServices;
 using DataTier.Commands;
 using DataTier.Models;
 using DataTier.Queries;
-using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace CalculateMortgageAndSendMail.Functions
 {
     public class CalculateMortgage
     {
-        private readonly IMediator _mediator;
-        public CalculateMortgage(IMediator mediator)
+        private readonly IMortgageService _mortgageService;
+        private readonly CustomerCommandHandler _commandHandler;
+        private readonly CustomerQueryHandler _queryHandler;
+
+        public CalculateMortgage(
+            IMortgageService mortgageService,
+            CustomerCommandHandler commandHandler,
+            CustomerQueryHandler queryHandler)
         {
-            _mediator = mediator;
+            _commandHandler = commandHandler;
+            _queryHandler = queryHandler;
+            _mortgageService = mortgageService;
         }
 
         [Function("CalculateMortgage")]
@@ -25,19 +31,15 @@ namespace CalculateMortgageAndSendMail.Functions
         {
             var logger = context.GetLogger("CalculateMortgage");
 
-            var query = new GetCustomersByNoOffer();
-            IEnumerable<Customer> customers = await _mediator.Send(query);
+            var query = new FindNewlyCreatedCustomers();
+            var result = await _queryHandler.Handle(query);
 
-            foreach (var customer in customers)
+            foreach (Customer customer in result)
             {
-                customer.MortgageOffer = new MortgageOffer(customer.IncomePerYear);
-                var command = new UpdateCustomer()
-                {
-                    Customer = customer
-                };
-                await _mediator.Send(command);
+                MortgageOffer offer = _mortgageService.CalculateMortgage(customer.YearlyIncome);
+                var command = new AddMortgageOffer(customer.CustomerId, offer);
+                await _commandHandler.Handle(command);
             }
-            logger.LogInformation($"Total Mortgages Calculated: {customers.Count()}");
 
             logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
             logger.LogInformation($"Next timer schedule at: {myTimer.ScheduleStatus.Next}");

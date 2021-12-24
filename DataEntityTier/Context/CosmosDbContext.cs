@@ -1,6 +1,5 @@
 ﻿using DataTier.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 
 namespace DataTier.Context
 {
@@ -8,37 +7,39 @@ namespace DataTier.Context
     {
         public DbSet<Customer> Customers { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public CosmosDbContext(DbContextOptions<CosmosDbContext> contextOptions)
+            : base(contextOptions)
         {
-            string connectionString = Environment.GetEnvironmentVariable("connectionString");
-            string databaseName = Environment.GetEnvironmentVariable("databaseName");
-
-            optionsBuilder.UseCosmos(connectionString, databaseName);
-
-            /*optionsBuilder.LogTo(Console.WriteLine);*/
+            this.Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             modelBuilder.HasDefaultContainer("Customers");
 
-            modelBuilder.Entity<Customer>().ToContainer("Customers");
+            modelBuilder.Entity<Customer>()
+                .ToContainer("Customers");
 
             modelBuilder.Entity<Customer>()
                 .HasNoDiscriminator();
 
             modelBuilder.Entity<Customer>()
-                .HasKey(c => c.Id);
+                .Property(c => c.CustomerId)
+                .ToJsonProperty("id")
+                .ValueGeneratedOnAdd();
 
             modelBuilder.Entity<Customer>()
-                .HasPartitionKey(c => c.partitionKey);
+                .HasKey(c => c.CustomerId);
+
+            modelBuilder.Entity<Customer>()
+                .HasPartitionKey(c => c.Lastname);
 
             modelBuilder.Entity<Customer>()
                 .UseETagConcurrency();
 
             modelBuilder.Entity<Customer>()
-                .OwnsOne(typeof(MortgageOffer), "MortgageOffer");
+                .OwnsOne(c => c.MortgageOffer)
+                .WithOwner(m => m.Customer);
         }
     }
 }

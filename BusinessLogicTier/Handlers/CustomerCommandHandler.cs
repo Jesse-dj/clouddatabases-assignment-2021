@@ -1,72 +1,89 @@
-﻿using AutoMapper;
+﻿using BusinessTier.IHandler;
 using DataTier.Commands;
 using DataTier.Context;
 using DataTier.Models;
-using MediatR;
-using Microsoft.Azure.Cosmos;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace BusinessTier.Handlers
 {
     public class CustomerCommandHandler :
-        IRequestHandler<AddNewCustomer, Customer>,
-        IRequestHandler<UpdateCustomer, Customer>
+        ICommandHandler<AddNewCustomer>,
+        ICommandHandler<AddMortgageOffer>,
+        ICommandHandler<CustomerReceivedMessage>
     {
-        private readonly IMapper _mapper;
         private readonly ILogger _logger;
-        public CustomerCommandHandler(ILogger<CustomerCommandHandler> logger)
+        private readonly CosmosDbContext _context;
+
+        public CustomerCommandHandler(
+            ILogger<CustomerCommandHandler> logger,
+            CosmosDbContext context)
         {
             _logger = logger;
-
-            var config = new MapperConfiguration(cfg => {
-                cfg.CreateMap<CustomerDTO, Customer>();
-            });
-            _mapper = config.CreateMapper();
+            _context = context;
         }
 
-        public async Task<Customer> Handle(UpdateCustomer request, CancellationToken cancellationToken)
+        public async Task Handle(AddNewCustomer command)
         {
             try
             {
-                using (var context = new CosmosDbContext())
+                var newCustomer = new Customer()
                 {
-                    await context.Database.EnsureCreatedAsync();
+                    Firstname = command.Firstname,
+                    Lastname = command.Lastname,
+                    Email = command.Email,
+                    YearlyIncome = command.YearlyIncome
+                };
 
-                    var result = context.Update<Customer>(request.Customer);
-                    await context.SaveChangesAsync(cancellationToken);
-                    return await Task.FromResult(result.Entity);
-                }
+                await _context.AddAsync(newCustomer);
+
+                await _context.SaveChangesAsync();
             }
-            catch (CosmosException cosmosException)
+            catch (DbUpdateException updateException)
             {
-                _logger.LogWarning(cosmosException.Message);
-                return null;
+                _logger.LogError($"Add Customer Exception: {updateException.Message}");
+                throw;
             }
 
         }
 
-        async Task<Customer> IRequestHandler<AddNewCustomer, Customer>.Handle(AddNewCustomer request, CancellationToken cancellationToken)
+        public async Task Handle(AddMortgageOffer command)
         {
             try
             {
-                using(var context = new CosmosDbContext())
-                {
-                    await context.Database.EnsureCreatedAsync();
+                var customer = await _context.FindAsync<Customer>(command.customerId);
 
-                    Customer newCustomer = _mapper.Map<CustomerDTO, Customer>(request.Customer);
-                    var result = await context.AddAsync(newCustomer, cancellationToken);
-                    await context.SaveChangesAsync(cancellationToken);
-                    return result.Entity;
-                }
+                customer.MortgageOffer = command.mortgageOffer;
+
+                _context.Update(customer);
+
+                await _context.SaveChangesAsync();
             }
-            catch (CosmosException cosmosException)
+            catch (DbUpdateException updateException)
             {
-                _logger.LogWarning(cosmosException.Message);
-                return null;
+                _logger.LogError($"Add Mortgage Exception: {updateException.Message}");
+                throw;
             }
+        }
 
+        public async Task Handle(CustomerReceivedMessage command)
+        {
+            try
+            {
+                var customer = await _context.FindAsync<Customer>(command.CustomerId);
+
+                customer.ReceivedMessage = true;
+
+                _context.Update(customer);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException updateException)
+            {
+                _logger.LogError($"Customer Received Message Exception: {updateException.Message}");
+                throw;
+            }
         }
     }
 }

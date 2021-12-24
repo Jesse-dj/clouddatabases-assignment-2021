@@ -1,0 +1,128 @@
+{
+	"info": {
+		"_postman_id": "2587e149-a12c-4089-8280-cee44a75d2d7",
+		"name": "Cloud Databases",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Add Customer",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"firstName\":\"Jesse\",\r\n    \"lastName\":\"de Jonge\",\r\n    \"email\":\"Jesse-dj@hotmail.nl\",\r\n    \"datofBirth\":\"25-12-1999\",\r\n    \"yearlyIncome\": 40000\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_address}}/api/customers",
+					"host": [
+						"{{base_address}}"
+					],
+					"path": [
+						"api",
+						"customers"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Calculate Mortgage",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"input\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_address}}/admin/functions/CalculateMortgage",
+					"host": [
+						"{{base_address}}"
+					],
+					"path": [
+						"admin",
+						"functions",
+						"CalculateMortgage"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Send Mail",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"input\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_address}}/admin/functions/SendMail",
+					"host": [
+						"{{base_address}}"
+					],
+					"path": [
+						"admin",
+						"functions",
+						"SendMail"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_address",
+			"value": "http://localhost:7071"
+		}
+	]
+}
